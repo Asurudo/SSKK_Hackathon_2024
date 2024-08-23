@@ -1,0 +1,12 @@
+.vs/
+*.meta
+Library/
+Logs/
+obj/
+Temp/
+SSKK_Hackathon_2024.sln
+Assembly-CSharp-Editor.csproj
+Assembly-CSharp.csproj
+.vsconfig
+Assets/Scenes/
+Assets/StreamingAssets/
