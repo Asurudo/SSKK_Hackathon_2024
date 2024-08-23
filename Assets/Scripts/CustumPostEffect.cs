@@ -4,14 +4,20 @@ using UnityEngine.Rendering.Universal;
 
 public class CustumPostEffect : VolumeComponent, IPostProcessComponent
 {
-    [Tooltip("KuwaharaFilter RectSize.")]
-    public ClampedIntParameter rectSize = new ClampedIntParameter(1, 1, 18);
-    [Tooltip("Outline.")]
-    public BoolParameter outline = new BoolParameter(false);
-    [Tooltip("Edge DepthThreshold.")]
-    public ClampedFloatParameter edgeDepthThreshold = new ClampedFloatParameter(0.1f, 0.01f, 1.0f);
-    [Tooltip("Edge Color.")]
-    public ColorParameter edgeColor = new ColorParameter(new Color(0.01f, 0.01f, 0.01f));
+    [Range(0.1f, 3.0f)]
+    public FloatParameter fogDensity = new FloatParameter(0.0f);
+    public ColorParameter fogColor = new ColorParameter(Color.white);
+    public FloatParameter fogStart = new FloatParameter(0.0f);
+    public FloatParameter fogEnd = new FloatParameter(10.0f);
+
+    public TextureParameter noiseTexture = new TextureParameter(null);
+
+    [Range(-0.5f, 0.5f)]
+    public FloatParameter fogXSpeed = new FloatParameter(0.1f);
+    [Range(-0.5f, 0.5f)]
+    public FloatParameter fogYSpeed = new FloatParameter(0.1f);
+    [Range(0.0f, 3.0f)]
+    public FloatParameter noiseAmount = new FloatParameter(1.0f);
 
     public bool IsActive() => true;
 

@@ -34,7 +34,7 @@ public class CustumRendererFeature : ScriptableRendererFeature
         desc.depthBufferBits = 0; // Color and depth cannot be combined in RTHandles
         RenderingUtils.ReAllocateIfNeeded(ref cameraNormalTextureRT, desc, FilterMode.Point, TextureWrapMode.Clamp, name: cameraNormalTexturePass.TextureName);
         cameraNormalTexturePass.Setup(desc, cameraNormalTextureRT);
-        CustumRenderPass.SetRenderTarget(renderer.cameraColorTargetHandle, cameraNormalTextureRT);
+        CustumRenderPass.SetRenderTarget(renderer.cameraColorTargetHandle, cameraNormalTextureRT, renderingData.cameraData.renderer.cameraColorTargetHandle);
     }
 }
 

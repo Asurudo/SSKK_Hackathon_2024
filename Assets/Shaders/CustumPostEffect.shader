@@ -3,10 +3,14 @@
     Properties 
     {
         [Toggle(SAMPLE_EFFECT_ENABLE)] _SampleEffectEnable("Sample Effect Enable", Float) = 1
-        _RectSize           ("RectSize", int) = 0
-        _EdgeDepthThreshold ("EdgeDepthThreshold", Float) = 0
-        _EdgeColor          ("EdgeColor", Color) = (0,0,0,0)
-        _EdgeFactor         ("EdgeFactor", Float) = 0
+        _FogDensity ("Fog Density", Float) = 0.01
+        _FogColor ("Fog Color", Color) = (1, 1, 1, 1)
+        _FogStart ("Fog Start", Float) = 0.0
+        _FogEnd ("Fog End", Float) = 1.0
+        _NoiseTex ("Noise Texture", 2D) = "white" {}
+        _FogXSpeed ("Fog Horizontal Speed", Float) = 0.01
+        _FogYSpeed ("Fog Vertical Speed", Float) = 0.01
+        _NoiseAmount ("Noise Amount", Float) = 1
     }
     SubShader
     {
@@ -27,139 +31,80 @@
             #include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"   
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareNormalsTexture.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/lighting.hlsl"
 
-            float4x4 _ViewToWorld;
-            float4 _BlitTexture_TexelSize;
-            float4 _CameraDepthTexture_TexelSize;
 
-            float   _SampleEffectEnable;
-            int     _RectSize;
-            float   _EdgeDepthThreshold;
-            float4  _EdgeColor;
-            float   _EdgeFactor;
-            
+            half _FogDensity;
+            float4 _FogColor;
+            float _FogStart;
+            float _FogEnd;
+            half _FogXSpeed;
+            half _FogYSpeed;
+            half _NoiseAmount;
+            float4x4 _FrustumCornersRay;
 
-            
-            struct VS
+            float4 _CameraOpaqueTexture_TexelSize;
+            TEXTURE2D(_NoiseTex);
+            SAMPLER(_CameraOpaqueTexture);
+            SAMPLER(sampler_NoiseTex); 
+           
+
+            struct a2v
             {
-                uint vertexID : SV_VertexID;
-            };
-                                    
-            struct PS
-            {
+               float4 vertex   : POSITION;
+               float2 texcoord : TEXCOORD;
+               uint vertexID : SV_VertexID;
+            }; 
+
+            struct v2f {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                float2 uv_depth : TEXCOORD1;
+                float4 interpolatedRay : TEXCOORD2;
             };
-                                        
-            PS vert(VS vin)
-            {
-                PS pout;
-                                    
-                pout.pos = GetFullScreenTriangleVertexPosition(vin.vertexID);
-                pout.uv = GetFullScreenTriangleTexCoord(vin.vertexID);
-                                    
-                return pout;
-            }
-
-            float4 SampleEffect(PS pin)
-            {
-                /* GetNormal
-                float3 normal = SampleSceneNormals(pin.uv);
-                normal = mul((float3x3)_ViewToWorld, normal);
-                */
-
-                float depth = SampleSceneDepth(pin.uv);
-                depth = Linear01Depth(depth, _ZBufferParams);
-                
-
-                const float2 uv =  pin.uv;
-		        const float4 inputColor = SAMPLE_TEXTURE2D(_BlitTexture, sampler_PointClamp, uv);
-
-                float4 vOutputColor = inputColor;
-
-                // Kuwahawa-Filter NxN
-                // https://en.wikipedia.org/wiki/Kuwahara_filter
-                {
-                    #define MAX_RECT_SIZE           (18)
-                    #define MAX_KERNEL_HALF_SIZE    (MAX_RECT_SIZE-1)
-                    #define MAX_KERNEL_SIZE         (MAX_KERNEL_HALF_SIZE*2+1)
-                    const int iRectSize         = clamp(_RectSize, 1, MAX_RECT_SIZE);
-                    const int iKernelHalfSize   = iRectSize-1;
-                    const int iKernelSize       = iKernelHalfSize*2+1;
-                    if (iRectSize > 1)
-                    {
-                        float4 avColor[MAX_KERNEL_SIZE * MAX_KERNEL_SIZE];
-                        {
-                            for (int i = 0; i < iKernelSize; ++i)
-                            {
-                                for (int j = 0; j < iKernelSize; ++j)
-                                {
-                                    avColor[i * iKernelSize + j] = SAMPLE_TEXTURE2D(_BlitTexture, sampler_PointClamp, uv + float2(i - iKernelHalfSize, j - iKernelHalfSize) * _BlitTexture_TexelSize.xy);
-                                }
-                            }
-                        }
-                        float4 vMaxVarianceColor = float4(1.e+38f, 1.e+38f, 1.e+38f, 0);
-                        [unroll]
-                        for (int k = 0; k < 4; ++k)
-                        {
-                            const int2 vRectOffset = int2(k % 2, k / 2) * iKernelHalfSize; // (0,0),(1,0),(0,1),(1,1)*iKernelHalfSize
-                            float4 vMeanColor = float4(0, 0, 0, 0);
-                            float4 vMeanColorSq = float4(0, 0, 0, 0);
-                            for (int i = 0; i < iRectSize; ++i)
-                            {
-                                for (int j = 0; j < iRectSize; ++j)
-                                {
-                                    const float4 vColor = avColor[(vRectOffset.x + i) * iKernelSize + (vRectOffset.y + j)];
-                                    vMeanColor += vColor;
-                                    vMeanColorSq += vColor * vColor;
-                                }
-                            }
-                            const float fSampleCount = float(iRectSize * iRectSize);
-                            vMeanColor /= fSampleCount;
-                            vMeanColorSq /= fSampleCount;
-                            const float4 vVarianceColor = abs(vMeanColorSq - vMeanColor * vMeanColor);
-                            if (vVarianceColor.r < vMaxVarianceColor.r) vOutputColor.r = vMeanColor.r;
-                            if (vVarianceColor.g < vMaxVarianceColor.g) vOutputColor.g = vMeanColor.g;
-                            if (vVarianceColor.b < vMaxVarianceColor.b) vOutputColor.b = vMeanColor.b;
-                            vMaxVarianceColor = min(vMaxVarianceColor, vVarianceColor);
-                        }
-                    }
-                }
-
-                // Sobel Filter
-                // https://blog.siliconstudio.co.jp/2021/05/960/
-                {
-                    float afLogViewZ[3][3];
-                    {
-                        for (int i = 0; i < 3; ++i)
-                        {
-                            for (int j = 0; j < 3; ++j)
-                            {
-                                const float depth = SampleSceneDepth(uv + float2(i - 1, j - 1) * _CameraDepthTexture_TexelSize.xy);
-                                const float linearDepth = Linear01Depth(depth, _ZBufferParams);
-                                const float viewZ = LinearEyeDepth(depth, _ZBufferParams);
-                                afLogViewZ[i][j] = log2(viewZ);
-                            }
-                        }
-                    }
-                    const float fSobelX = afLogViewZ[0][0] + 2.0f * afLogViewZ[0][1] + afLogViewZ[0][2] - afLogViewZ[2][0] - 2.0f * afLogViewZ[2][1] - afLogViewZ[2][2];
-                    const float fSobelY = afLogViewZ[0][0] + 2.0f * afLogViewZ[1][0] + afLogViewZ[2][0] - afLogViewZ[0][2] - 2.0f * afLogViewZ[1][2] - afLogViewZ[2][2];
-                    const float fSobel = sqrt(fSobelX * fSobelX + fSobelY * fSobelY);
-                    if (fSobel > _EdgeDepthThreshold)
-                    {
-                        vOutputColor.rgb = lerp(vOutputColor.rgb, _EdgeColor.rgb, _EdgeFactor);
-                    }
-                }
-                return float4(vOutputColor.rgb, 1.0f);
-            }
             
-            float4 frag(PS pin) : SV_Target
-            {
-                #ifdef SAMPLE_EFFECT_ENABLE
-                    return SampleEffect(pin);
-                #else
-                    return SAMPLE_TEXTURE2D(_BlitTexture, sampler_PointClamp, pin.uv);
+            v2f vert(a2v v) {
+              v2f o;
+              o.pos = GetFullScreenTriangleVertexPosition(v.vertexID);
+              o.uv = GetFullScreenTriangleTexCoord(v.vertexID);
+              o.uv_depth = GetFullScreenTriangleTexCoord(v.vertexID);
+
+                #if UNITY_UV_STARTS_AT_TOP
+                if (_CameraOpaqueTexture_TexelSize.y < 0)
+                o.uv_depth.y = 1 - o.uv_depth.y;
                 #endif
+              int index = 0;
+                if (v.texcoord.x < 0.5 && v.texcoord.y < 0.5) {
+                index = 0;
+                } else if (v.texcoord.x > 0.5 && v.texcoord.y < 0.5) {
+                index = 1;
+                } else if (v.texcoord.x > 0.5 && v.texcoord.y > 0.5) {
+                index = 2;
+                } else {
+                index = 3;
+                }
+              o.interpolatedRay = _FrustumCornersRay[index];
+              return o;
+            }
+
+            float4 frag(v2f i) : SV_Target {
+
+                float linearDepth = LinearEyeDepth(SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture,i.uv_depth).x,_ZBufferParams).x;
+
+                float3 worldPos = _WorldSpaceCameraPos + linearDepth *  i.interpolatedRay.xyz;
+
+                float2 speed = _Time.y *  float2(_FogXSpeed, _FogYSpeed);
+                float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex ,i.uv + speed).r - 0.5) *  _NoiseAmount;
+
+                float fogDensity = (_FogEnd - worldPos.y) / (_FogEnd - _FogStart); 
+
+                fogDensity = saturate(fogDensity  * _FogDensity *  (1 + noise));
+
+                float4 finalColor = tex2D(_CameraOpaqueTexture, i.uv);
+                // float4 finalColor = float4(1.0, 1.0, 1.0, 1.0);
+                finalColor.rgb = lerp(finalColor.rgb, _FogColor.rgb, fogDensity);
+
+                return finalColor;
             }
             ENDHLSL
         }
