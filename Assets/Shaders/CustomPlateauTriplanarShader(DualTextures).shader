@@ -71,6 +71,7 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
             struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
+                float4 position : TEXCOORD2;
                 float3 positionWS : TEXCOORD1;
                 float3 normalWS : NORMAL;
                 float2 uv : TEXCOORD0;
@@ -117,6 +118,11 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
             {
                 Varyings output;
                 
+                output.position = input.positionOS;
+
+                input.positionOS.x += sign(input.positionOS.x) * sin(_Time.w+input.positionOS.x)/1;
+                input.positionOS.y += sign(input.positionOS.y) * cos(_Time.w+input.positionOS.y)/1;
+
                 VertexPositionInputs vertexData = GetVertexPositionInputs(input.positionOS.xyz);
                 VertexNormalInputs normalData = GetVertexNormalInputs(input.normalOS, input.tangentOS);
                 output.positionHCS = vertexData.positionCS;
@@ -126,9 +132,24 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
                 return output;
             }
 
+            float random(float x)
+            {
+                float y = frac(sin(x)*10.0);
+                return y;
+            } 
+
             float4 frag(Varyings input) : SV_Target
             {
                 float3 finalColor = SimpleLighting(input.positionWS, input.normalWS, _BaseColor);
+
+                float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/1000 + input.position.x/4600+input.position.z/4100, _Time.w/1000 + input.position.y/4000)));
+                
+                // float4(frac(_Time.w+input.position.x), 
+                //                         frac(_Time.w+input.position.y), 
+                //                        frac(_Time.w+input.position.z), 1.0); 
+                float saturationFactor = 0.4; 
+
+                finalColor.rgb = lerp(finalColor.rgb, tintColor.rgb, saturationFactor);
 
                 return float4(finalColor,0.1);
             }

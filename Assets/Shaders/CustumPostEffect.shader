@@ -41,7 +41,7 @@
             half _FogXSpeed;
             half _FogYSpeed;
             half _NoiseAmount;
-            float4x4 _FrustumCornersRay;
+            // float4x4 _FrustumCornersRay;
 
             float4 _CameraOpaqueTexture_TexelSize;
             TEXTURE2D(_NoiseTex);
@@ -60,7 +60,7 @@
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
                 float2 uv_depth : TEXCOORD1;
-                float4 interpolatedRay : TEXCOORD2;
+                // float4 interpolatedRay : TEXCOORD2;
             };
             
             v2f vert(a2v v) {
@@ -68,22 +68,7 @@
               o.pos = GetFullScreenTriangleVertexPosition(v.vertexID);
               o.uv = GetFullScreenTriangleTexCoord(v.vertexID);
               o.uv_depth = GetFullScreenTriangleTexCoord(v.vertexID);
-
-                #if UNITY_UV_STARTS_AT_TOP
-                if (_CameraOpaqueTexture_TexelSize.y < 0)
-                o.uv_depth.y = 1 - o.uv_depth.y;
-                #endif
-              int index = 0;
-                if (v.texcoord.x < 0.5 && v.texcoord.y < 0.5) {
-                index = 0;
-                } else if (v.texcoord.x > 0.5 && v.texcoord.y < 0.5) {
-                index = 1;
-                } else if (v.texcoord.x > 0.5 && v.texcoord.y > 0.5) {
-                index = 2;
-                } else {
-                index = 3;
-                }
-              o.interpolatedRay = _FrustumCornersRay[index];
+              // o.interpolatedRay = _FrustumCornersRay[0]; 
               return o;
             }
 
@@ -91,17 +76,17 @@
 
                 float linearDepth = LinearEyeDepth(SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture,i.uv_depth).x,_ZBufferParams).x;
 
-                float3 worldPos = _WorldSpaceCameraPos + linearDepth *  i.interpolatedRay.xyz;
+                float3 worldPos = _WorldSpaceCameraPos;// + linearDepth *  i.interpolatedRay.xyz;
 
                 float2 speed = _Time.y *  float2(_FogXSpeed, _FogYSpeed);
-                float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex ,i.uv + speed).r - 0.5) *  _NoiseAmount;
+                float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, i.uv + speed).r - 0.5) *  _NoiseAmount;
 
                 float fogDensity = (_FogEnd - worldPos.y) / (_FogEnd - _FogStart); 
 
                 fogDensity = saturate(fogDensity  * _FogDensity *  (1 + noise));
 
                 float4 finalColor = tex2D(_CameraOpaqueTexture, i.uv);
-                // float4 finalColor = float4(1.0, 1.0, 1.0, 1.0);
+                
                 finalColor.rgb = lerp(finalColor.rgb, _FogColor.rgb, fogDensity);
 
                 return finalColor;
