@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: GroundMaterial
-  m_Shader: {fileID: 4800000, guid: cfba39b10591b334a91e6803000f2d7c, type: 3}
+  m_Shader: {fileID: 4800000, guid: 130002aee337b8a45a6a8533b59d549e, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -34,6 +34,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Cubemap:
+        m_Texture: {fileID: 8900000, guid: 63ad99b15b7249c4e8264722e76b8075, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -48,6 +52,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GrassTexture:
+        m_Texture: {fileID: 2800000, guid: 6780b3536a95e1b43add0c0f568766c7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _InteriorNoiseMap:
@@ -86,6 +94,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _WaveMap:
+        m_Texture: {fileID: 2800000, guid: 4dd2165fc3bb479458113bfb0d808fd3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -102,6 +114,9 @@ Material:
     m_Floats:
     - _AlphaClip: 0
     - _AlphaToMask: 0
+    - _AmbientStrength: 0.57
+    - _BladeCurve: 2.14
+    - _BladeForward: 0.38
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
@@ -113,6 +128,7 @@ Material:
     - _DepthOffset: 1
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
+    - _Distortion: 0
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
@@ -121,13 +137,18 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _GrassDensity: 0.94
+    - _GrassHeight: 1.29
+    - _GrassWidth: 0.06
     - _GuassianHStep: 0.5
     - _GuassianResolution: 800
     - _GuassianVStep: 0.5
     - _InlinePower: 2
     - _InlineThred: 0.5
     - _InteriorNoiseLevel: 0.15
+    - _MaxDist: 300
     - _Metallic: 0
+    - _MinDist: 0
     - _OUTLINEAUTOSIZE: 0
     - _OcclusionStrength: 1
     - _OutlineAutoSize: 0
@@ -136,7 +157,10 @@ Material:
     - _OutlineWidth: 0.5
     - _Parallax: 0.005
     - _QueueOffset: 0
+    - _Rad: 0.246
+    - _Radius: 0.3
     - _RampSytle: 3
+    - _RandomHeight: 0.25
     - _ReceiveShadows: 1
     - _ScanLineSpeed: 1
     - _ShadowNum: 3
@@ -146,8 +170,13 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
+    - _Strength: 5
     - _Surface: 0
     - _UseTextureGray: 1
+    - _WaveXSpeed: -0.021
+    - _WaveYSpeed: -0.061
+    - _WindSpeed: 100
+    - _WindStrength: 0.05
     - _WorkflowMode: 1
     - _ZWrite: 1
     - _foldout_Diffuse: 1
@@ -156,6 +185,7 @@ Material:
     - _foldout_ToonShadow: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 0.0047169924, b: 0.0047169924, a: 1}
+    - _BottomColor: {r: 0, g: 1, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DepthEdgeColor: {r: 0.025231387, g: 0.114962965, b: 0.5943396, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
@@ -164,6 +194,7 @@ Material:
     - _ScanLineColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShadowColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _TopColor: {r: 1, g: 1, b: 0, a: 1}
   m_BuildTextureStacks: []
 --- !u!114 &8100251619009225529
 MonoBehaviour:

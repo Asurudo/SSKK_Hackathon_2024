@@ -3,10 +3,10 @@ Shader "URP/Glass/S_Bubble"
     Properties 
     {
         [Header(Base)][Space(6)]
-        _BaseColor ("基本?色", Color) = (1.0, 1.0, 1.0, 1.0)
-    	_Hue ("色相", Range(0.0, 1.0)) = 0.0
-    	_ReflectIntensity ("薄膜干?亮度", Range(0, 20)) = 2
-    	_BubbleAlpha ("泡泡透明度", Range(0,2)) = 1
+        _BaseColor ("BaseColor", Color) = (1.0, 1.0, 1.0, 1.0)
+    	_Hue ("Hue", Range(0.0, 1.0)) = 0.0
+    	_ReflectIntensity ("ReflectIntensity", Range(0, 20)) = 2
+    	_BubbleAlpha ("BubbleAlpha", Range(0,2)) = 1
         _FloatSpeed ("Float Speed", Float) = 1.0
         _FloatSize ("Float Size", Float) = 0.5
         
@@ -23,11 +23,11 @@ Shader "URP/Glass/S_Bubble"
         
         [Header(Reflection)][Space(6)]
 
-    	[Toggle] _UseNormalReflection ("使用正常反射？", Float) = 1.0
-    	[Toggle] _UseCustomReflection ("使用自定?天空球？", Float) = 1.0
-        [NoScaleOffset] _CubeMap ("自定?天空球", Cube) = "_Skybox" {}
-        _CubeMapLOD ("天空球模糊?度", Range(0.0, 10.0)) = 0.0
-        _ReflectAmount ("天空球反射的?度", Range(0,1)) = 0.5
+    	[Toggle] _UseNormalReflection ("UseNormalReflection", Float) = 1.0
+    	[Toggle] _UseCustomReflection ("UseCustomReflection", Float) = 1.0
+        [NoScaleOffset] _CubeMap ("CubeMap", Cube) = "_Skybox" {}
+        _CubeMapLOD ("CubeMapLOD", Range(0.0, 10.0)) = 0.0
+        _ReflectAmount ("ReflectAmount", Range(0,1)) = 0.5
         
         [Header(Normal)][Space(6)]
         _BumpScale("Normal Scale", Float) = 1.0
@@ -148,6 +148,12 @@ Shader "URP/Glass/S_Bubble"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
+            float random(float x)
+            {
+                float y = frac(sin(x)*100000.0);
+                return y;
+            }
+
             Varyings vert (Attributes input)
 			{
                 Varyings output;
@@ -162,6 +168,19 @@ Shader "URP/Glass/S_Bubble"
                 float offset = sin(time + output.positionCS.x * 0.5) * _FloatSize;
                 float4 floatOffset = float4(0, offset, 0, 0);
                 output.positionCS = output.positionCS + floatOffset;
+                
+                // float upwardOffset = _Time.y * 1;
+                // output.positionCS.y -= upwardOffset;
+                // if(output.positionCS.y >= 30)
+                //     output.positionCS.y -= 30;
+
+                // float bubbleID = dot(floor(output.positionCS.xy), float2(12.9898, 78.233));
+
+                // float randomValueX = random(float3(bubbleID, 0.0, 0.0));
+                // float randomValueZ = random(float3(0.0, bubbleID, 0.0));
+                 
+                // output.positionCS.x += (0.01 * (randomValueX - 0.5)) * deltaTime;
+                // output.positionCS.z += (0.01 * (randomValueZ - 0.5)) * deltaTime;
 
                 output.positionWS = positionInputs.positionWS;
             	

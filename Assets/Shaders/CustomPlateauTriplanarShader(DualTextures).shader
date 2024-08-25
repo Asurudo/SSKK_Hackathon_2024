@@ -147,7 +147,7 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
                 // float4(frac(_Time.w+input.position.x), 
                 //                         frac(_Time.w+input.position.y), 
                 //                        frac(_Time.w+input.position.z), 1.0); 
-                float saturationFactor = 0.4; 
+                float saturationFactor = 0.3; 
 
                 finalColor.rgb = lerp(finalColor.rgb, tintColor.rgb, saturationFactor);
 
