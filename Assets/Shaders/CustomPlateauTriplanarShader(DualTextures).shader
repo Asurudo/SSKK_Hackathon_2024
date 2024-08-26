@@ -142,7 +142,11 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
             {
                 float3 finalColor = SimpleLighting(input.positionWS, input.normalWS, _BaseColor);
 
-                float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/1000 + input.position.x/4600+input.position.z/4100, _Time.w/1000 + input.position.y/4000)));
+                float dis = -sqrt((input.position.x-721)*(input.position.x-721)
+                +(input.position.y-37)*(input.position.y-37)
+                +(input.position.z+798)*(input.position.z+798));
+
+                float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/30 + dis/4600, _Time.w/30 + dis/4000)));
                 
                 // float4(frac(_Time.w+input.position.x), 
                 //                         frac(_Time.w+input.position.y), 
