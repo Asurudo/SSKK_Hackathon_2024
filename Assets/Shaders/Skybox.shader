@@ -1,28 +1,24 @@
-﻿Shader "URP/Sky/S_CustomSkybox"
+﻿Shader "Skybox"
 {
     Properties 
     {
-        _Tint ("染色", Color) = (0.5, 0.5, 0.5, 0.5)
-        [Gamma] _Exposure ("曝光", Range(0, 8)) = 1.0
-        _Mipmap ("模糊", Range(0, 10)) = 0.0
-        _Rotation ("旋转", Range(0, 360)) = 0
-        [NoScaleOffset]_SkyCube ("天空球", Cube) = "Skybox" {}
+        _Tint ("Tint", Color) = (0.5, 0.5, 0.5, 0.5)
+        [Gamma] _Exposure ("Exposure", Range(0, 8)) = 1.0
+        _Mipmap ("Mipmap", Range(0, 10)) = 0.0
+        _Rotation ("Rotation", Range(0, 360)) = 0
+        [NoScaleOffset]_SkyCube ("SkyCube", Cube) = "Skybox" {}
     }
     SubShader 
     {
         Tags 
         {
             "RenderPipeline" = "UniversalPipeline"
-            //"RenderType" = "Opaque"
             "Queue"="Background"
             "RenderType"="Background"
             "PreviewType"="Skybox"
         }
 
         Pass {
-            Name "SKY_FORWARD"
-            //Tags { "LightMode" = "UniversalForward" }
-             
             Cull Off
             ZWrite Off
 
@@ -38,17 +34,14 @@
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            CBUFFER_START(UnityPerMaterial)
 			uniform half4 _Tint;
             uniform half _Exposure;
             uniform half _Mipmap;
             uniform float _Rotation;
 			uniform half4 _SkyCube_HDR;
-            CBUFFER_END
 			
 			TEXTURECUBE(_SkyCube);	    SAMPLER(sampler_SkyCube);
 
-			//Y轴旋转
             float3 RotateAroundYInDegrees (float3 vertex, float degrees)
             {
                 float alpha = degrees * PI / 180.0;
@@ -58,10 +51,8 @@
                 return float3(mul(m, vertex.xz), vertex.y).xzy;
             }
 
-			//取HDR图W通道
 			inline half3 DecodeHDR (half4 data, half4 decodeInstructions)
             {
-                // If Linear mode is not supported we can skip exponent part
                 #if defined(UNITY_NO_LINEAR_COLORSPACE)
                     return (decodeInstructions.x * data.a) * data.rgb;
                 #else
@@ -69,10 +60,9 @@
                 #endif
             }
 
-			//判断Gamma空间
 			#ifdef UNITY_COLORSPACE_GAMMA
             #define unity_ColorSpaceDouble half4(2.0, 2.0, 2.0, 2.0)
-            #else // Linear values
+            #else
             #define unity_ColorSpaceDouble half4(4.59479380, 4.59479380, 4.59479380, 2.0)
             #endif
 			

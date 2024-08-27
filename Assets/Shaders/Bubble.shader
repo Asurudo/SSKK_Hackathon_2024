@@ -1,4 +1,4 @@
-Shader "URP/Glass/S_Bubble"
+Shader "Bubble"
 {
     Properties 
     {
@@ -104,8 +104,6 @@ Shader "URP/Glass/S_Bubble"
 			TEXTURE2D(_BumpMap);	SAMPLER(sampler_BumpMap);
             TEXTURECUBE(_CubeMap);  SAMPLER(sampler_CubeMap);
 			
-
-			// Hue
 			float3 Unity_Hue_Radians_float(float3 In, float Offset)
 			{
 			    float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -122,7 +120,6 @@ Shader "URP/Glass/S_Bubble"
 			                ? hue - 1
 			                : hue;
 
-			    // HSV to RGB
 			    float4 K2 = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
 			    float3 P2 = abs(frac(hsv.xxx + K2.xyz) * 6.0 - K2.www);
 			    return hsv.z * lerp(K2.xxx, saturate(P2 - K2.xxx), hsv.y);
@@ -200,52 +197,34 @@ Shader "URP/Glass/S_Bubble"
 			{
                 UNITY_SETUP_INSTANCE_ID(input);
 
-				// FlowMap
                 float2 flowUV  = (input.uv.zw + _Time.x * 0.1 * _FlowUVDir.xy) * _FlowMap_ST.xy + _FlowMap_ST.zw;
                 float3 flowDir = SAMPLE_TEXTURE2D(_FlowMap, sampler_FlowMap, flowUV).xyz * 2 - 1;
                 flowDir *= _FlowSpeed;
 
-				// FlowMap Speed
                 float phase0 = frac(_Time.x * 0.1 * _TimeSpeed);
                 float phase1 = frac(_Time.x * 0.1 * _TimeSpeed + 0.5);
 				float flowlerp = abs((0.5 - phase0) / 0.5);
 
-				// NormalMap
                 float4 var_BumpMap0 = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, flowDir.xy * phase0);
                 float4 var_BumpMap1 = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, flowDir.xy * phase1);
                 float4 packedNormal = lerp(var_BumpMap0, var_BumpMap1, flowlerp);
                 float3 normalTS = UnpackNormalScale(packedNormal, _BumpScale);
 
-				// Normal
 			    float3 bitangent = input.tangentWS.w * cross(input.normalWS.xyz, input.tangentWS.xyz);
                 half3x3 TBN = half3x3(input.tangentWS.xyz, bitangent.xyz, input.normalWS.xyz);
 				half3 normalWS = normalize(TransformTangentToWorld(normalTS, TBN));
 				float3 viewDirWS = normalize(_WorldSpaceCameraPos.xyz - input.positionWS);
 				
-				/*
-				// MainLight
-                float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
-                Light mainLight = GetMainLight(shadowCoord);
-                float3 mainlightColor = mainLight.color;
-				float mainlightShadow = mainLight.distanceAttenuation * mainLight.shadowAttenuation;
-                float3 mainlightDir = normalize(mainLight.direction);
-				half3 halfDirWS = normalize(viewDirWS + mainlightDir);
-				float blinnPhong = pow(saturate(dot(normalize(input.normalWS), halfDirWS)), 128.0) * 0.5;
-				*/
-				
-                // Fresnel
                 float fresnel1 = saturate(dot(normalWS, viewDirWS));
                 float fresnel2 = saturate(dot(normalize(input.normalWS), viewDirWS));
 				float fresnel = pow(1.0 - fresnel2, _RimPower);
 
-				// Ramp
-				float2 wave = lerp(flowDir.xy * phase0, flowDir.xy * phase1, flowlerp);		// à¯ì¸îgçTêß
+				float2 wave = lerp(flowDir.xy * phase0, flowDir.xy * phase1, flowlerp);
                 float RampYAxis = saturate((fresnel1 - fresnel2 * 0.95) + 0.4 - wave.x * 0.8);
                 float RampXAxis = _RampXAxisOffset + packedNormal.r * _RampXAxisNoiseStrength;
                 float2 rampTexUV = float2(RampXAxis, RampYAxis);
                 float3 rampColor = SAMPLE_TEXTURE2D(_RampMap, sampler_RampMap, rampTexUV).rgb * _ReflectIntensity;
 				
-                // Reflect
 				#if _USENORMALREFLECTION_ON
 					float3 reflectDirWS = reflect(-viewDirWS, input.normalWS);
 				#else
@@ -262,20 +241,17 @@ Shader "URP/Glass/S_Bubble"
 				#endif
                 float3 reflectCol  = clamp(reflectCol1 + reflectCol2, 0.0, 2.0);
 
-				// ?éÊñæìx
 				float reflectLumin = abs(dot(reflectCol, float3(0.22,0.707,0.071)));		
 
-                // Blend
-                float3 finalRampCol = rampColor * (pow(reflectLumin, 1.5) + 0.05);	// Ramp?êFéÛîΩéÀ?ëúñæìxâe?úkëÂ
+                float3 finalRampCol = rampColor * (pow(reflectLumin, 1.5) + 0.05);
                 finalRampCol = pow(abs(finalRampCol), 1.4);
 				
                 float3 finalCol = finalRampCol * _BaseColor.rgb + fresnel * _RimColor.rgb * _RimColor.a * finalRampCol * reflectLumin;
-				finalCol = Unity_Hue_Radians_float(finalCol, _Hue);	// Hue
+				finalCol = Unity_Hue_Radians_float(finalCol, _Hue);
 				finalCol += reflectCol;
 				
-                float finalAlpha = _BubbleAlpha * (reflectLumin * 0.5 + 0.5) + fresnel * 0.2;	//ìßñæìxéÛîΩéÀ?ëúñæìx ??å˙ìxâe?
+                float finalAlpha = _BubbleAlpha * (reflectLumin * 0.5 + 0.5) + fresnel * 0.2;
 				
-				// Fog
                 float fogFactor = ComputeFogFactor(input.positionCS.z * input.positionCS.w);
                 finalCol = MixFog(finalCol, fogFactor);
                 

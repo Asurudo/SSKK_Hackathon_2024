@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6380657851666411230}
   - component: {fileID: 272209041620742029}
   m_Layer: 0
-  m_Name: Sphere
+  m_Name: BubblePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

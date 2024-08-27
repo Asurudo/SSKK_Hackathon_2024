@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Fire
+  m_Name: FireMaterial
   m_Shader: {fileID: 4800000, guid: a84678eef96d1064bb9c3a2cc1b15e56, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0

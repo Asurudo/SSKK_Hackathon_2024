@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public class NewMonoBehaviour : MonoBehaviour
+    public class BubbleGenBehaviour : MonoBehaviour
     {
         public GameObject objectForSpawn;
         private List<SpawnObject> spawnObjectList;
@@ -11,7 +11,6 @@ namespace Assets.Scripts
 
         private void Start()
         {
-            Debug.Log("?");
             CreateCollections();
             Generate(objectCount);
         }

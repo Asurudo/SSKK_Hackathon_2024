@@ -1,4 +1,4 @@
-Shader "URP/Fire" {
+Shader "Fire" {
     Properties {
         _MainTex("Texture", 2D) = "white"{}
 
@@ -135,7 +135,6 @@ Shader "URP/Fire" {
             }
 
             float4 frag(Varyings input) : SV_Target {
-                // return float4(1,1,1,1);
                 float t = _Time.y;
                 float2 uv = 0;
             #if defined(_STYLE_PIXEL)

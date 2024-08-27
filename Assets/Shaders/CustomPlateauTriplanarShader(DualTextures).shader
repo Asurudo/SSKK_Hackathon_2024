@@ -34,6 +34,9 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
         // Default inputs properties
         [MainTexture] _BaseMap ("Texture", 2D) = "white" {}
         [MainColor] _BaseColor ("Color", Color) = (1,1,1,1)
+        _CircleCenter ("Circle Center Color", Vector) = (0, 0, 0, 0)
+        _CircleSpreadSpeed ("Circle Spread Speed", Float) = 30
+        _CircleTexFrequency ("Circle Texture Frequency", Float) = 4000
     }
     SubShader
     {
@@ -106,6 +109,10 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
             float4 _Top_EmissionColor;
             float4 _MainColor;
 
+            float4 _CircleCenter;
+            float _CircleSpreadSpeed; 
+            float _CircleTexFrequency;
+
             //Default Inputs
             sampler2D _BaseMap;
 
@@ -120,8 +127,10 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
                 
                 output.position = input.positionOS;
 
+                // START ビルが周期的に揺れる
                 input.positionOS.x += sign(input.positionOS.x) * sin(_Time.w+input.positionOS.x)/1;
                 input.positionOS.y += sign(input.positionOS.y) * cos(_Time.w+input.positionOS.y)/1;
+                // END ビルが周期的に揺れる
 
                 VertexPositionInputs vertexData = GetVertexPositionInputs(input.positionOS.xyz);
                 VertexNormalInputs normalData = GetVertexNormalInputs(input.normalOS, input.tangentOS);
@@ -132,30 +141,21 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
                 return output;
             }
 
-            float random(float x)
-            {
-                float y = frac(sin(x)*10.0);
-                return y;
-            } 
-
             float4 frag(Varyings input) : SV_Target
             {
                 float3 finalColor = SimpleLighting(input.positionWS, input.normalWS, _BaseColor);
 
-                float dis = -sqrt((input.position.x-721)*(input.position.x-721)
-                +(input.position.y-37)*(input.position.y-37)
-                +(input.position.z+798)*(input.position.z+798));
+                // START ビルに色を塗る
+                float distanceFromEbisuBill = -distance(input.position, _CircleCenter.xyz);
+                float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/_CircleSpreadSpeed + distanceFromEbisuBill/_CircleTexFrequency, 
+                                                               _Time.w/_CircleSpreadSpeed + distanceFromEbisuBill/_CircleTexFrequency)));
+                // END ビルに色を塗る
 
-                float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/30 + dis/4600, _Time.w/30 + dis/4000)));
-                
-                // float4(frac(_Time.w+input.position.x), 
-                //                         frac(_Time.w+input.position.y), 
-                //                        frac(_Time.w+input.position.z), 1.0); 
                 float saturationFactor = 0.3; 
 
                 finalColor.rgb = lerp(finalColor.rgb, tintColor.rgb, saturationFactor);
 
-                return float4(finalColor,0.1);
+                return float4(finalColor, 1.0);
             }
             ENDHLSL
         }

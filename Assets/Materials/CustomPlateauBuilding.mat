@@ -186,6 +186,8 @@ Material:
     - _Blend: 30
     - _BlendMode: 0
     - _BumpScale: 1
+    - _CircleSpreadSpeed: 30
+    - _CircleTexFrequency: 4000
     - _ConservativeDepthOffsetEnable: 0
     - _CullMode: 2
     - _CullModeForward: 2
@@ -260,6 +262,7 @@ Material:
     - _ZWrite: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _CircleCenter: {r: 721.1, g: 36.99, b: -798.69, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}

@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_Bubble
+  m_Name: BubbleMaterial
   m_Shader: {fileID: 4800000, guid: 452a86e85bead6e4287d310c74a159c5, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
