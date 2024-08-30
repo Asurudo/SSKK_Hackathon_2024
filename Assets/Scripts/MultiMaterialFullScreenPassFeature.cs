@@ -1,8 +1,10 @@
 using UnityEngine;
+using System.Collections;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 using UnityEngine.Experimental.Rendering.RenderGraphModule;
+using PLATEAU.CityGML;
 
 public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
 {
@@ -28,7 +30,7 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
     /// <summary>
     /// Material the Renderer Feature uses to render the effect.
     /// </summary>
-    public Material[] passMaterial;
+    public UnityEngine.Material[] passMaterial;
     /// <summary>
     /// Selection for when the effect is rendered.
     /// </summary>
@@ -84,7 +86,7 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
         fullScreenPass.Setup(passMaterial, passIndex, requiresColor, injectedBeforeTransparents, "FullScreenPassRendererFeature", renderingData);
 
         renderer.EnqueuePass(fullScreenPass);
-        
+
     }
 
     /// <inheritdoc/>
@@ -95,7 +97,7 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
 
     class CustomFullScreenRenderPass : ScriptableRenderPass
     {
-        private static Material[] s_PassMaterial;
+        private static UnityEngine.Material[] s_PassMaterial;
         private int m_PassIndex;
         private bool m_RequiresColor;
         private bool m_IsBeforeTransparents;
@@ -104,7 +106,7 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
         private RTHandle m_CopiedColor;
         private static readonly int m_BlitTextureShaderID = Shader.PropertyToID("_BlitTexture");
 
-        public void Setup(Material[] mat, int index, bool requiresColor, bool isBeforeTransparents, string featureName, in RenderingData renderingData)
+        public void Setup(UnityEngine.Material[] mat, int index, bool requiresColor, bool isBeforeTransparents, string featureName, in RenderingData renderingData)
         {
             s_PassMaterial = mat;
             m_PassIndex = index;
@@ -134,7 +136,7 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             ref var cameraData = ref renderingData.cameraData;
-            
+
             var cmd = CommandBufferPool.Get();
 
             if (s_PassMaterial.Length == 0)
@@ -156,9 +158,9 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
                     {
                         if (m_RequiresColor)
                         {
-                        // For some reason BlitCameraTexture(cmd, dest, dest) scenario (as with before transparents effects) blitter fails to correctly blit the data
-                        // Sometimes it copies only one effect out of two, sometimes second, sometimes data is invalid (as if sampling failed?).
-                        // Adding RTHandle in between solves this issue.
+                            // For some reason BlitCameraTexture(cmd, dest, dest) scenario (as with before transparents effects) blitter fails to correctly blit the data
+                            // Sometimes it copies only one effect out of two, sometimes second, sometimes data is invalid (as if sampling failed?).
+                            // Adding RTHandle in between solves this issue.
 
                             var source = cameraData.renderer.cameraColorTargetHandle;
 
@@ -167,6 +169,42 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
 
                             var viewToWorld = cameraData.camera.cameraToWorldMatrix;
                             s_PassMaterial[i].SetMatrix("_ViewToWorld", viewToWorld);
+
+                            Matrix4x4 frustumCorners = Matrix4x4.identity;
+                            var camera = renderingData.cameraData.camera;
+                            float fov = camera.fieldOfView;
+                            float near = camera.nearClipPlane;
+                            float aspect = camera.aspect;
+
+                            float halfHeight = near * Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad);
+                            Vector3 toRight = camera.transform.right * halfHeight * aspect;
+                            Vector3 toTop = camera.transform.up * halfHeight;
+
+                            Vector3 topLeft = camera.transform.forward * near + toTop - toRight;
+                            float scale = topLeft.magnitude / near;
+
+                            topLeft.Normalize();
+                            topLeft *= scale;
+
+                            Vector3 topRight = camera.transform.forward * near + toRight + toTop;
+                            topRight.Normalize();
+                            topRight *= scale;
+
+                            Vector3 bottomLeft = camera.transform.forward * near - toTop - toRight;
+                            bottomLeft.Normalize();
+                            bottomLeft *= scale;
+
+                            Vector3 bottomRight = camera.transform.forward * near + toRight - toTop;
+                            bottomRight.Normalize();
+                            bottomRight *= scale;
+
+                            frustumCorners.SetRow(0, bottomLeft);
+                            frustumCorners.SetRow(1, bottomRight);
+                            frustumCorners.SetRow(2, topRight);
+                            frustumCorners.SetRow(3, topLeft);
+
+                            s_PassMaterial[i].SetMatrix("_FrustumCornersRay", frustumCorners);
+
                         }
 
                         CoreUtils.SetRenderTarget(cmd, cameraData.renderer.cameraColorTargetHandle);
@@ -185,7 +223,7 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
 
         private class PassData
         {
-            internal Material effectMaterial;
+            internal UnityEngine.Material effectMaterial;
             internal int passIndex;
             internal TextureHandle source;
             public TextureHandle copiedColor;

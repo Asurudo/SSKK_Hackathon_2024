@@ -40,6 +40,7 @@
 
             SAMPLER(_CameraOpaqueTexture);
             float4 _CameraOpaqueTexture_TexelSize;
+            float4x4 _FrustumCornersRay;
 
             TEXTURE2D(_NoiseTex);
             SAMPLER(sampler_NoiseTex); 
@@ -54,27 +55,40 @@
             struct Varyings {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                float2 uv_depth : TEXCOORD1;
+                float4 interpolatedRay : TEXCOORD1;
             };
             
             Varyings vert(Attributes v) {
               Varyings o;
               o.pos = GetFullScreenTriangleVertexPosition(v.vertexID);
               o.uv = GetFullScreenTriangleTexCoord(v.vertexID);
-              o.uv_depth = GetFullScreenTriangleTexCoord(v.vertexID);
+
+              int index = 0;
+			  if (v.texcoord.x < 0.5 && v.texcoord.y < 0.5) {
+				  index = 0;
+			  } else if (v.texcoord.x > 0.5 && v.texcoord.y < 0.5) {
+				  index = 1;
+			  } else if (v.texcoord.x > 0.5 && v.texcoord.y > 0.5) {
+				  index = 2;
+			  } else {
+				  index = 3;
+			  }
+			
+			  o.interpolatedRay = _FrustumCornersRay[index];
+
               return o;
             }
 
             float4 frag(Varyings i) : SV_Target {
 
-                float linearDepth = LinearEyeDepth(SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture,i.uv_depth).x,_ZBufferParams).x;
-                float3 worldPos = _WorldSpaceCameraPos;
+                float linearDepth = LinearEyeDepth(SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture,i.uv).x,_ZBufferParams).x;
+                float3 worldPos = _WorldSpaceCameraPos + linearDepth * i.interpolatedRay.xyz;
 
                 float2 speed = _Time.y *  float2(_FogXSpeed, _FogYSpeed);
                 float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, i.uv + speed).r - 0.5) *  _NoiseAmount;
 
                 float fogDensity = (_FogEnd - worldPos.y) / (_FogEnd - _FogStart); 
-                fogDensity = saturate(fogDensity  * _FogDensity *  (1 + noise));
+                fogDensity = saturate(fogDensity  * _FogDensity *  (1 + noise)) * 0.5;
 
                 float4 finalColor = tex2D(_CameraOpaqueTexture, i.uv);
                 finalColor.rgb = lerp(finalColor.rgb, _FogColor.rgb, fogDensity);
