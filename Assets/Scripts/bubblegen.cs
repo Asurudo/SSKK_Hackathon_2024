@@ -7,7 +7,7 @@ namespace Assets.Scripts
     {
         public GameObject objectForSpawn;
         private List<SpawnObject> spawnObjectList;
-        private int objectCount = 100000;
+        private int objectCount = 150000;
 
         private void Start()
         {
@@ -57,7 +57,7 @@ namespace Assets.Scripts
         {
             Vector3 randmPosition;
             randmPosition.x = Random.Range(-1000, 1000);
-            randmPosition.y = Random.Range(100, 400);
+            randmPosition.y = Random.Range(10, 400);
             randmPosition.z = Random.Range(-1000, 1000);
             return randmPosition;
         }

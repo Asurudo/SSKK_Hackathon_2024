@@ -61,42 +61,61 @@
             };
             
             Varyings vert(Attributes v) {
-              Varyings o;
-              o.pos = GetFullScreenTriangleVertexPosition(v.vertexID);
-              o.uv = GetFullScreenTriangleTexCoord(v.vertexID);
+                Varyings o;
 
-              int index = 0;
-			  if (v.texcoord.x < 0.5 && v.texcoord.y < 0.5) {
-				  index = 0;
-			  } else if (v.texcoord.x > 0.5 && v.texcoord.y < 0.5) {
-				  index = 1;
-			  } else if (v.texcoord.x > 0.5 && v.texcoord.y > 0.5) {
-				  index = 2;
-			  } else {
-				  index = 3;
-			  }
-			
-			  o.interpolatedRay = _FrustumCornersRay[index];
+                // フルスクリーントライアングルの頂点位置を取得
+                o.pos = GetFullScreenTriangleVertexPosition(v.vertexID);
+ 
+                // フルスクリーントライアングルのテクスチャ座標を取得
+                o.uv = GetFullScreenTriangleTexCoord(v.vertexID);
 
-              return o;
-            }
+                // 入力テクスチャ座標に基づいて視錐体の角のインデックスを決定
+                int index = 0;
+                if (v.texcoord.x < 0.5 && v.texcoord.y < 0.5) {
+                  // 左下角 
+                  index = 0;
+                } else if (v.texcoord.x > 0.5 && v.texcoord.y < 0.5) { 
+                  // 右下角
+                  index = 1;
+                } else if (v.texcoord.x > 0.5 && v.texcoord.y > 0.5) {
+                  // 右上角
+                  index = 2;
+                } else {
+                  // 左上角
+                  index = 3;
+                }
 
-            float4 frag(Varyings i) : SV_Target {
+                // 視錐体の角の光線方向をフラグメントシェーダーに渡す
+                o.interpolatedRay = _FrustumCornersRay[index];
+                return o;
+                } 
 
-                float linearDepth = LinearEyeDepth(SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture,i.uv).x,_ZBufferParams).x;
-                float3 worldPos = _WorldSpaceCameraPos + linearDepth * i.interpolatedRay.xyz;
 
-                float2 speed = _Time.y *  float2(_FogXSpeed, _FogYSpeed);
-                float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, i.uv + speed).r - 0.5) *  _NoiseAmount;
+           float4 frag(Varyings i) : SV_Target {
 
-                float fogDensity = (_FogEnd - worldPos.y) / (_FogEnd - _FogStart); 
-                fogDensity = saturate(fogDensity  * _FogDensity *  (1 + noise)) * _FogEffect;
+            // カメラ深度テクスチャから深度値を取得し、線形深度に変換
+            float linearDepth = LinearEyeDepth(SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, i.uv).x, _ZBufferParams).x;
+    
+            // ワールド空間での位置を計算
+            float3 worldPos = _WorldSpaceCameraPos + linearDepth * i.interpolatedRay.xyz;
 
-                float4 finalColor = tex2D(_CameraOpaqueTexture, i.uv);
-                finalColor.rgb = lerp(finalColor.rgb, _FogColor.rgb, fogDensity);
+            // ノイズテクスチャのサンプリングと速度に基づくノイズの適用
+            float2 speed = _Time.y * float2(_FogXSpeed, _FogYSpeed);
+            float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, i.uv + speed).r - 0.5) * _NoiseAmount;
 
-                return finalColor;
-            }
+            // フォグの密度を計算
+            float fogDensity = (_FogEnd - worldPos.y) / (_FogEnd - _FogStart); 
+            fogDensity = saturate(fogDensity * _FogDensity * (1 + noise)) * _FogEffect;
+
+            // カメラの不透明テクスチャから最終色を取得
+            float4 finalColor = tex2D(_CameraOpaqueTexture, i.uv);
+    
+            // フォグの色で最終色を補正
+            finalColor.rgb = lerp(finalColor.rgb, _FogColor.rgb, fogDensity);
+
+            return finalColor;
+        }
+
             ENDHLSL
         }
 

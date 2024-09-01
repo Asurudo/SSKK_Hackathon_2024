@@ -1,54 +1,70 @@
 using UnityEngine;
-using System.Collections;
+using UnityEngine.Experimental.Rendering.RenderGraphModule;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-using UnityEngine.Experimental.Rendering.RenderGraphModule;
-using PLATEAU.CityGML;
-
+/// <summary>
+/// Defines the <see cref="MultiMaterialFullScreenPassFeature" />
+/// </summary>
 public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
 {
     /// <summary>
-    /// An injection point for the full screen pass. This is similar to RenderPassEvent enum but limits to only supported events.
+    /// An injection point for the full screen pass. This is similar to RenderPassEvent enum but limits to only supported events
     /// </summary>
     public enum InjectionPoint
     {
         /// <summary>
-        /// Inject a full screen pass before transparents are rendered
+        /// Defines the BeforeRenderingTransparents
         /// </summary>
         BeforeRenderingTransparents = RenderPassEvent.BeforeRenderingTransparents,
+
         /// <summary>
-        /// Inject a full screen pass before post processing is rendered
+        /// Defines the BeforeRenderingPostProcessing
         /// </summary>
         BeforeRenderingPostProcessing = RenderPassEvent.BeforeRenderingPostProcessing,
+
         /// <summary>
-        /// Inject a full screen pass after post processing is rendered
+        /// Defines the AfterRenderingPostProcessing
         /// </summary>
         AfterRenderingPostProcessing = RenderPassEvent.AfterRenderingPostProcessing
     }
 
     /// <summary>
-    /// Material the Renderer Feature uses to render the effect.
+    /// Material the Renderer Feature uses to render the effect
     /// </summary>
     public UnityEngine.Material[] passMaterial;
+
     /// <summary>
-    /// Selection for when the effect is rendered.
+    /// Selection for when the effect is rendered
     /// </summary>
     public InjectionPoint injectionPoint = InjectionPoint.AfterRenderingPostProcessing;
+
     /// <summary>
-    /// One or more requirements for pass. Based on chosen flags certain passes will be added to the pipeline.
+    /// One or more requirements for pass. Based on chosen flags certain passes will be added to the pipeline
     /// </summary>
     public ScriptableRenderPassInput requirements = ScriptableRenderPassInput.Color;
+
     /// <summary>
     /// An index that tells renderer feature which pass to use if passMaterial contains more than one. Default is 0.
     /// We draw custom pass index entry with the custom dropdown inside FullScreenPassRendererFeatureEditor that sets this value.
-    /// Setting it directly will be overridden by the editor class.
+    /// Setting it directly will be overridden by the editor class
     /// </summary>
     [HideInInspector]
     public int passIndex = 0;
 
+    /// <summary>
+    /// Defines the fullScreenPass
+    /// </summary>
     private CustomFullScreenRenderPass fullScreenPass;
+
+    /// <summary>
+    /// Defines the requiresColor
+    /// </summary>
     private bool requiresColor;
+
+    /// <summary>
+    /// Defines the injectedBeforeTransparents
+    /// </summary>
     private bool injectedBeforeTransparents;
 
     /// <inheritdoc/>
@@ -82,11 +98,9 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
             return;
         }
 
-
         fullScreenPass.Setup(passMaterial, passIndex, requiresColor, injectedBeforeTransparents, "FullScreenPassRendererFeature", renderingData);
 
         renderer.EnqueuePass(fullScreenPass);
-
     }
 
     /// <inheritdoc/>
@@ -95,17 +109,60 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
         fullScreenPass.Dispose();
     }
 
-    class CustomFullScreenRenderPass : ScriptableRenderPass
+    /// <summary>
+    /// Defines the <see cref="CustomFullScreenRenderPass" />
+    /// </summary>
+    internal class CustomFullScreenRenderPass : ScriptableRenderPass
     {
+        /// <summary>
+        /// Defines the s_PassMaterial
+        /// </summary>
         private static UnityEngine.Material[] s_PassMaterial;
+
+        /// <summary>
+        /// Defines the m_PassIndex
+        /// </summary>
         private int m_PassIndex;
+
+        /// <summary>
+        /// Defines the m_RequiresColor
+        /// </summary>
         private bool m_RequiresColor;
+
+        /// <summary>
+        /// Defines the m_IsBeforeTransparents
+        /// </summary>
         private bool m_IsBeforeTransparents;
+
+        /// <summary>
+        /// Defines the m_PassData
+        /// </summary>
         private PassData m_PassData;
+
+        /// <summary>
+        /// Defines the m_ProfilingSampler
+        /// </summary>
         private ProfilingSampler m_ProfilingSampler;
+
+        /// <summary>
+        /// Defines the m_CopiedColor
+        /// </summary>
         private RTHandle m_CopiedColor;
+
+        /// <summary>
+        /// Defines the m_BlitTextureShaderID
+        /// </summary>
         private static readonly int m_BlitTextureShaderID = Shader.PropertyToID("_BlitTexture");
 
+        /// <summary>
+        /// The Setup
+        /// </summary>
+        /// <param name="mat">The mat<see cref="UnityEngine.Material[]"/></param>
+        /// <param name="index">The index<see cref="int"/></param>
+        /// <param name="requiresColor">The requiresColor<see cref="bool"/></param>
+        /// <param name="isBeforeTransparents">The isBeforeTransparents<see cref="bool"/></param>
+        /// <param name="featureName">The featureName<see cref="string"/></param>
+        /// <param name="renderingData">The renderingData<see cref="RenderingData"/></param>
         public void Setup(UnityEngine.Material[] mat, int index, bool requiresColor, bool isBeforeTransparents, string featureName, in RenderingData renderingData)
         {
             s_PassMaterial = mat;
@@ -121,11 +178,19 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
             m_PassData ??= new PassData();
         }
 
+        /// <summary>
+        /// The Dispose
+        /// </summary>
         public void Dispose()
         {
             m_CopiedColor?.Release();
         }
 
+        /// <summary>
+        /// The OnCameraSetup
+        /// </summary>
+        /// <param name="cmd">The cmd<see cref="CommandBuffer"/></param>
+        /// <param name="renderingData">The renderingData<see cref="RenderingData"/></param>
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
             // FullScreenPass manages its own RenderTarget.
@@ -133,6 +198,11 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
             ResetTarget();
         }
 
+        /// <summary>
+        /// The Execute
+        /// </summary>
+        /// <param name="context">The context<see cref="ScriptableRenderContext"/></param>
+        /// <param name="renderingData">The renderingData<see cref="RenderingData"/></param>
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             ref var cameraData = ref renderingData.cameraData;
@@ -209,7 +279,6 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
 
                         CoreUtils.SetRenderTarget(cmd, cameraData.renderer.cameraColorTargetHandle);
 
-
                         CoreUtils.DrawFullScreen(cmd, s_PassMaterial[i], null, pass);
                     }
                 }
@@ -221,13 +290,30 @@ public class MultiMaterialFullScreenPassFeature : ScriptableRendererFeature
             CommandBufferPool.Release(cmd);
         }
 
+        /// <summary>
+        /// Defines the <see cref="PassData" />
+        /// </summary>
         private class PassData
         {
+            /// <summary>
+            /// Defines the effectMaterial
+            /// </summary>
             internal UnityEngine.Material effectMaterial;
+
+            /// <summary>
+            /// Defines the passIndex
+            /// </summary>
             internal int passIndex;
+
+            /// <summary>
+            /// Defines the source
+            /// </summary>
             internal TextureHandle source;
+
+            /// <summary>
+            /// Defines the copiedColor
+            /// </summary>
             public TextureHandle copiedColor;
         }
     }
-
 }

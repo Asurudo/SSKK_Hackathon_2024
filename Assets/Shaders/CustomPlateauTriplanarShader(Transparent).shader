@@ -106,7 +106,7 @@ Shader "Custom/CustomPlateauTriplanarShader(Transparent)"
 
             float4 frag(Varyings input) : SV_Target
             {
-                float3 finalColor = SimpleLighting(input.positionWS, input.normalWS, _BaseColor);
+                float3 finalColor = SimpleLighting(input.positionWS.xyz, input.normalWS.xyz, _BaseColor.xyz);
 
                 return float4(finalColor,0.1);
             }

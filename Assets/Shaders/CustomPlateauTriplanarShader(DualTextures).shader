@@ -37,6 +37,9 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
         _CircleCenter ("Circle Center Color", Vector) = (0, 0, 0, 0)
         _CircleSpreadSpeed ("Circle Spread Speed", Float) = 30
         _CircleTexFrequency ("Circle Texture Frequency", Float) = 4000
+        _CircleTexColorRatio ("Circle Texture Color Ratio", Range(0, 1)) = 0.7
+        _JellyEdge ("Jelly Edge", Float) = 100
+        _JellyRefelectionColor ("Jelly Refelection Color",Color) = (1,1,1,1)
     }
     SubShader
     {
@@ -113,6 +116,9 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
             float4 _CircleCenter;
             float _CircleSpreadSpeed; 
             float _CircleTexFrequency;
+            float _JellyEdge;
+            float4 _JellyRefelectionColor;
+            float _CircleTexColorRatio;
 
             //Default Inputs
             sampler2D _BaseMap;
@@ -128,10 +134,9 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
                 
                 output.position = input.positionOS;
 
-                // START ビルが周期的に揺れる
+                // ビルが周期的に揺れる、グニグニ
                 input.positionOS.x += sign(input.positionOS.x) * sin(_Time.w+input.positionOS.x)/1;
                 input.positionOS.y += sign(input.positionOS.y) * cos(_Time.w+input.positionOS.y)/1;
-                // END ビルが周期的に揺れる
 
                 VertexPositionInputs vertexData = GetVertexPositionInputs(input.positionOS.xyz);
                 VertexNormalInputs normalData = GetVertexNormalInputs(input.normalOS, input.tangentOS);
@@ -142,33 +147,34 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
-            // TODO: 加入果??感
+
             float4 frag(Varyings input) : SV_Target
             {
-                // 基本光照效果
-                float3 finalColor = SimpleLighting(input.positionWS, input.normalWS, _BaseColor);
+                // 基本的なライティング効果
+                float3 finalColor = SimpleLighting(input.positionWS.xyz, input.normalWS.xyz, _BaseColor.xyz);
 
-                // ?用其他效果，例如周期性?色
-                float distanceFromCenter = -distance(input.position, _CircleCenter.xyz);
+                // サークルの位置に基づく他の効果、例えば周期的な色合い
+                float distanceFromCenter = -distance(input.position.xyz, _CircleCenter.xyz);
                 float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/_CircleSpreadSpeed + distanceFromCenter/_CircleTexFrequency, 
                                                                _Time.w/_CircleSpreadSpeed + distanceFromCenter/_CircleTexFrequency)));
-                finalColor.rgb = lerp(finalColor.rgb, tintColor.rgb, 0.7);
+                finalColor.rgb = lerp(finalColor.rgb, tintColor.rgb, _CircleTexColorRatio);
 
-                // 果??感?理：基于?角的?色??
+                // ゼリー効果の処理：視線角度に基づく色合いの変化
                 float3 viewDir = normalize(_WorldSpaceCameraPos - input.positionWS);
-                float fresnelEffect = pow(1.0 - saturate(dot(viewDir, input.normalWS)), 500);
+                float fresnelEffect = pow(1.0 - saturate(dot(viewDir, input.normalWS)), _JellyEdge);
                 float4 jellyColor = lerp(float4(finalColor, 1.0), _BaseColor, fresnelEffect);
 
-                // 果??感?理：反射效果
+                // ゼリー効果の処理：反射効果
                 float3 reflection = reflect(viewDir, input.normalWS);
-                float4 reflectionColor = float4(1.0, 1.0, 1.0, 1.0); 
+                float4 reflectionColor = _JellyRefelectionColor; 
 
-                // 将果??感?用到?色中
+                // ゼリー効果を色合いに適用
                 finalColor = lerp(finalColor, jellyColor.rgb * reflectionColor.rgb, fresnelEffect);
 
-
+                // 最終的な色を返す
                 return float4(finalColor, 1.0);
             }
+
             ENDHLSL
         }
 
