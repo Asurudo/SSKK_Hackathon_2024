@@ -3,6 +3,7 @@
     Properties 
     {
         _FogDensity ("Fog Density", Float) = 0.01
+        _FogEffect ("Fog Effect", Range(0, 2)) = 0.5
         _FogColor ("Fog Color", Color) = (1, 1, 1, 1)
         _FogStart ("Fog Start", Float) = 0.0
         _FogEnd ("Fog End", Float) = 1.0
@@ -31,6 +32,7 @@
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/lighting.hlsl"
 
             half _FogDensity;
+            half _FogEffect;
             float4 _FogColor;
             float _FogStart;
             float _FogEnd;
@@ -88,7 +90,7 @@
                 float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, i.uv + speed).r - 0.5) *  _NoiseAmount;
 
                 float fogDensity = (_FogEnd - worldPos.y) / (_FogEnd - _FogStart); 
-                fogDensity = saturate(fogDensity  * _FogDensity *  (1 + noise)) * 0.5;
+                fogDensity = saturate(fogDensity  * _FogDensity *  (1 + noise)) * _FogEffect;
 
                 float4 finalColor = tex2D(_CameraOpaqueTexture, i.uv);
                 finalColor.rgb = lerp(finalColor.rgb, _FogColor.rgb, fogDensity);

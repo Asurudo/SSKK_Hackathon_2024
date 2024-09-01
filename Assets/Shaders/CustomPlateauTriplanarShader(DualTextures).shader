@@ -33,7 +33,7 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
 
         // Default inputs properties
         [MainTexture] _BaseMap ("Texture", 2D) = "white" {}
-        [MainColor] _BaseColor ("Color", Color) = (1,1,1,1)
+        [MainColor] _BaseColor ("Base Color", Color) = (1,1,1,1)
         _CircleCenter ("Circle Center Color", Vector) = (0, 0, 0, 0)
         _CircleSpreadSpeed ("Circle Spread Speed", Float) = 30
         _CircleTexFrequency ("Circle Texture Frequency", Float) = 4000
@@ -60,6 +60,7 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 
             #include "Sample/SampleLighting.hlsl"
 
@@ -136,24 +137,35 @@ Shader "Custom/CustomPlateauTriplanarShader(DualTextures)"
                 VertexNormalInputs normalData = GetVertexNormalInputs(input.normalOS, input.tangentOS);
                 output.positionHCS = vertexData.positionCS;
                 output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
-                output.normalWS = normalData.normalWS.xyz;
+
+                output.normalWS =  normalData.normalWS.xyz;
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
-
+            // TODO: 加入果??感
             float4 frag(Varyings input) : SV_Target
             {
+                // 基本光照效果
                 float3 finalColor = SimpleLighting(input.positionWS, input.normalWS, _BaseColor);
 
-                // START ビルに色を塗る
-                float distanceFromEbisuBill = -distance(input.position, _CircleCenter.xyz);
-                float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/_CircleSpreadSpeed + distanceFromEbisuBill/_CircleTexFrequency, 
-                                                               _Time.w/_CircleSpreadSpeed + distanceFromEbisuBill/_CircleTexFrequency)));
-                // END ビルに色を塗る
+                // ?用其他效果，例如周期性?色
+                float distanceFromCenter = -distance(input.position, _CircleCenter.xyz);
+                float4 tintColor = tex2D(_BaseMap, frac(float2(_Time.w/_CircleSpreadSpeed + distanceFromCenter/_CircleTexFrequency, 
+                                                               _Time.w/_CircleSpreadSpeed + distanceFromCenter/_CircleTexFrequency)));
+                finalColor.rgb = lerp(finalColor.rgb, tintColor.rgb, 0.7);
 
-                float saturationFactor = 0.3; 
+                // 果??感?理：基于?角的?色??
+                float3 viewDir = normalize(_WorldSpaceCameraPos - input.positionWS);
+                float fresnelEffect = pow(1.0 - saturate(dot(viewDir, input.normalWS)), 500);
+                float4 jellyColor = lerp(float4(finalColor, 1.0), _BaseColor, fresnelEffect);
 
-                finalColor.rgb = lerp(finalColor.rgb, tintColor.rgb, saturationFactor);
+                // 果??感?理：反射效果
+                float3 reflection = reflect(viewDir, input.normalWS);
+                float4 reflectionColor = float4(1.0, 1.0, 1.0, 1.0); 
+
+                // 将果??感?用到?色中
+                finalColor = lerp(finalColor, jellyColor.rgb * reflectionColor.rgb, fresnelEffect);
+
 
                 return float4(finalColor, 1.0);
             }

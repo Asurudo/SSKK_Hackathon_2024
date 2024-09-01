@@ -163,7 +163,8 @@ Material:
     - _EdgeDepthThreshold: 0
     - _EdgeFactor: 1
     - _EnvironmentReflections: 1
-    - _FogDensity: 0.1
+    - _FogDensity: 0.6
+    - _FogEffect: 0.5
     - _FogEnd: 100
     - _FogStart: 0
     - _FogXSpeed: 0.5
