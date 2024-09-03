@@ -24,15 +24,15 @@ Material:
   m_Shader: {fileID: 4800000, guid: 452a86e85bead6e4287d310c74a159c5, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _USECUSTOMREFLECTION_ON
   - _USENORMALREFLECTION_ON
-  m_InvalidKeywords:
   - _USEUNITYREFLECTION_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 2500
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
@@ -68,10 +68,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EnvCube:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 8900000, guid: 50f373096c7d87542950718787b316c4, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FlowMap:
+        m_Texture: {fileID: 2800000, guid: 0848567d20b1a834ca52d9fb7b71aea8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FlowTex:
         m_Texture: {fileID: 2800000, guid: 0848567d20b1a834ca52d9fb7b71aea8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -83,6 +87,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _NormalTex:
+        m_Texture: {fileID: 2800000, guid: 9577badd21736f04caaeff3cf663dce9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -92,6 +100,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RampMap:
+        m_Texture: {fileID: 2800000, guid: 6cd9b3c475961b748825f6c11af707f6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RampTex:
         m_Texture: {fileID: 2800000, guid: 6cd9b3c475961b748825f6c11af707f6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -115,11 +127,11 @@ Material:
     m_Floats:
     - _AlphaClip: 0
     - _Blend: 0
-    - _BubbleAlpha: 0.15
+    - _BubbleAlpha: 0.52
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _ColorReflectIntensity: 2
+    - _ColorReflectIntensity: 1.4
     - _CubeMapLOD: 0
     - _Cull: 2
     - _CullMode: 0
@@ -130,7 +142,9 @@ Material:
     - _EnvironmentReflections: 1
     - _FloatSize: 0.5
     - _FloatSpeed: 2
-    - _FlowSpeed: 0.5
+    - _FlowSpeed: 1
+    - _FresnelIntensity: 0.2
+    - _FresnelPow: 10
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -139,8 +153,8 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
-    - _RampXAxisNoiseStrength: 0.671
-    - _RampXAxisOffset: 0.171
+    - _RampXAxisNoiseStrength: 0.356
+    - _RampXAxisOffset: 0.152
     - _ReceiveShadows: 1
     - _ReflectAmount: 1
     - _ReflectInt: 2

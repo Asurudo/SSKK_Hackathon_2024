@@ -113,9 +113,8 @@ Shader "Custom/CustomSiliconStudioFire" {
                 // ワールド空間での位置を計算
                 float4 worldPos = mul(unity_ObjectToWorld, float4(localPos, 1.0));
 
-                // Billboardの位置をシン、コサインで変形させる
-                worldPos.x += sign(worldPos.x) * sin(_Time.w + worldPos.x) / 1;
-                worldPos.y += sign(worldPos.y) * cos(_Time.w + worldPos.y) / 1;
+                // worldPos.x += sign(worldPos.x) * sin(_Time.w + worldPos.x) / 1;
+                // worldPos.y += sign(worldPos.y) * cos(_Time.w + worldPos.y) / 1;
 
                 // ホーム座標系に変換
                 output.positionHCS = mul(UNITY_MATRIX_VP, worldPos);
@@ -150,7 +149,7 @@ Shader "Custom/CustomSiliconStudioFire" {
                 float t = _Time.y;
                 float2 uv = 0;
 
-                #if defined(_STYLE_PIXEL)
+            #if defined(_STYLE_PIXEL)
                 // 画素オフセットを定義します
                 float2 pixelOffset = float2(_PixelOffsetX, _PixelOffsetY);
     

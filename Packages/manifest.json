@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.synesthesias.plateau-unity-sdk": "file:../PLATEAU-SDK-for-Unity-v2.3.2.tgz",
     "com.unity.collab-proxy": "2.4.3",
     "com.unity.ide.rider": "3.0.28",
     "com.unity.ide.visualstudio": "2.0.22",

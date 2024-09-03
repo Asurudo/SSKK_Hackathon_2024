@@ -121,6 +121,7 @@ Shader "Custom/CustomBubble"
                 output.positionCS = output.positionCS + floatOffset;
                 
                 // TODO：バブルの位置変換
+                // Unity独自のレンダリング パイプラインが追加のカリングを使用しているため、Shaderだけではこの位置変換できない
                 // float upwardOffset = _Time.y * 1;
                 // output.positionCS.y -= upwardOffset;
                 // if(output.positionCS.y >= 30)
